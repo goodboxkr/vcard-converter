@@ -220,7 +220,16 @@ function setupDrop(dropId, inputId, onFile) {
 // ───────── vCard 파싱 ─────────
 function decodeQuotedPrintable(str) {
   str = str.replace(/=\r?\n/g, '');
-  return str.replace(/=([0-9A-Fa-f]{2})/g, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
+  const bytes = [];
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] === '=' && /^[0-9A-Fa-f]{2}$/.test(str.substr(i + 1, 2))) {
+      bytes.push(parseInt(str.substr(i + 1, 2), 16));
+      i += 2;
+    } else {
+      bytes.push(str.charCodeAt(i));
+    }
+  }
+  return new TextDecoder('utf-8').decode(new Uint8Array(bytes));
 }
 
 function unfoldLines(text) {
@@ -235,6 +244,8 @@ function parseVCard(text) {
   blocks.forEach(block => {
     const lines = block.split(/END:VCARD/i)[0].split('\n').map(l => l.trim()).filter(Boolean);
     const c = { 이름: '', 회사: '', 전화번호: [], 이메일: [], 주소: '', 메모: '' };
+    let fnValue = '';
+    let nValue = '';
 
     lines.forEach(line => {
       const colonIdx = line.indexOf(':');
@@ -249,10 +260,12 @@ function parseVCard(text) {
       value = value.replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\n/gi, ' ');
 
       if (prop === 'FN') {
-        if (!c.이름) c.이름 = value;
-      } else if (prop === 'N' && !c.이름) {
-        const parts = value.split(';').filter(Boolean);
-        c.이름 = parts.reverse().join(' ').trim();
+        if (!fnValue) fnValue = value;
+      } else if (prop === 'N') {
+        if (!nValue) {
+          const parts = value.split(';').filter(Boolean);
+          nValue = parts.reverse().join(' ').trim();
+        }
       } else if (prop === 'ORG') {
         c.회사 = value.split(';').filter(Boolean).join(' ');
       } else if (prop === 'TEL') {
@@ -266,6 +279,8 @@ function parseVCard(text) {
         c.메모 = value;
       }
     });
+
+    c.이름 = fnValue || nValue;
 
     if (c.이름 || c.전화번호.length || c.이메일.length) {
       contacts.push({
