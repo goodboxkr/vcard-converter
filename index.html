@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>연락처 변환기 - vCard(.vcf) ↔ 엑셀/CSV 무료 변환</title>
+<meta name="description" content="연락처 파일(vCard, .vcf)을 엑셀/CSV로, 엑셀/CSV를 연락처 파일로 무료로 변환하세요. 회원가입 없이 브라우저에서 바로 처리되며 서버에 저장되지 않습니다.">
+<link rel="canonical" href="https://whrbwkd.github.io/vcard-converter/">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --accent:#2563eb;
+    --accent-dark:#1d4ed8;
+    --bg:#f7f8fb;
+    --card:#ffffff;
+    --text:#1a1d29;
+    --sub:#5b6072;
+    --border:#e3e6ee;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.6;
+  }
+  header{
+    background:#fff;
+    border-bottom:1px solid var(--border);
+    padding:16px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  header a.logo{
+    font-size:20px;
+    font-weight:800;
+    color:var(--text);
+    text-decoration:none;
+  }
+  header a.logo span{color:var(--accent);}
+  nav a{
+    color:var(--sub);
+    text-decoration:none;
+    font-size:14px;
+    margin-left:18px;
+  }
+  nav a:hover{color:var(--accent);}
+  main{max-width:760px; margin:0 auto; padding:32px 20px 60px;}
+  h1{font-size:clamp(24px,5vw,32px); margin:0 0 10px; text-align:center;}
+  .lead{text-align:center; color:var(--sub); font-size:16px; margin:0 0 28px;}
+  .badge-row{display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:32px;}
+  .badge{
+    background:#eef2ff; color:var(--accent-dark); font-size:13px; font-weight:600;
+    padding:6px 14px; border-radius:20px;
+  }
+  .tabs{display:flex; gap:8px; margin-bottom:20px; background:#fff; padding:6px; border-radius:14px; border:1px solid var(--border);}
+  .tab-btn{
+    flex:1; padding:14px 10px; border:none; background:transparent; border-radius:10px;
+    font-size:16px; font-weight:700; color:var(--sub); cursor:pointer;
+  }
+  .tab-btn.active{background:var(--accent); color:#fff;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:28px 24px; box-shadow:0 2px 10px rgba(20,20,40,0.04);
+  }
+  .drop{
+    border:2px dashed var(--border); border-radius:14px; padding:40px 20px;
+    text-align:center; cursor:pointer; transition:border-color .15s, background .15s;
+  }
+  .drop.drag{border-color:var(--accent); background:#eef2ff;}
+  .drop input{display:none;}
+  .drop .icon{font-size:40px; margin-bottom:10px;}
+  .drop .main-text{font-size:17px; font-weight:700;}
+  .drop .sub-text{font-size:14px; color:var(--sub); margin-top:6px;}
+  .file-name{margin-top:14px; font-size:15px; font-weight:600; color:var(--accent-dark); text-align:center; display:none;}
+  .btn{
+    width:100%; margin-top:20px; padding:16px; border:none; border-radius:12px;
+    background:var(--accent); color:#fff; font-size:17px; font-weight:800; cursor:pointer;
+  }
+  .btn:disabled{background:#c7cad6; cursor:not-allowed;}
+  .btn:hover:not(:disabled){background:var(--accent-dark);}
+  .result{
+    margin-top:20px; padding:18px; border-radius:12px; background:#f0fdf4;
+    border:1px solid #bbf7d0; display:none; text-align:center;
+  }
+  .result.error{background:#fef2f2; border-color:#fecaca;}
+  .result a{color:var(--accent-dark); font-weight:800; text-decoration:none;}
+  .format-help{margin-top:28px; font-size:14px; color:var(--sub); background:#fff; border:1px solid var(--border); border-radius:12px; padding:18px 20px;}
+  .format-help b{color:var(--text);}
+  .privacy-note{
+    margin-top:28px; text-align:center; font-size:13.5px; color:var(--sub);
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  section.info{margin-top:56px;}
+  section.info h2{font-size:20px; margin-bottom:12px;}
+  section.info p{color:var(--sub); font-size:15px;}
+  footer{
+    border-top:1px solid var(--border); padding:28px 20px; text-align:center;
+    font-size:13px; color:var(--sub); background:#fff;
+  }
+  footer a{color:var(--sub); margin:0 8px; text-decoration:none;}
+  footer a:hover{color:var(--accent);}
+  @media (max-width:480px){
+    .tab-btn{font-size:14px; padding:12px 6px;}
+    .drop{padding:28px 14px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="/vcard-converter/">연락<span>변환</span>기</a>
+  <nav>
+    <a href="about.html">소개</a>
+    <a href="blog/">가이드</a>
+    <a href="privacy.html">개인정보처리방침</a>
+  </nav>
+</header>
+
+<main>
+  <h1>연락처 변환기</h1>
+  <p class="lead">vCard(.vcf) 연락처 파일을 엑셀/CSV로, 엑셀/CSV를 연락처 파일로 바로 변환하세요</p>
+  <div class="badge-row">
+    <span class="badge">회원가입 불필요</span>
+    <span class="badge">서버 업로드 없음</span>
+    <span class="badge">완전 무료</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="vcf2xl">vCard → 엑셀</button>
+    <button class="tab-btn" data-tab="xl2vcf">엑셀 → vCard</button>
+  </div>
+
+  <div class="panel active" id="panel-vcf2xl">
+    <div class="card">
+      <div class="drop" id="drop-vcf">
+        <input type="file" id="file-vcf" accept=".vcf,text/vcard,text/x-vcard">
+        <div class="icon">📇</div>
+        <div class="main-text">.vcf 파일을 여기로 끌어놓거나 클릭하세요</div>
+        <div class="sub-text">아이폰/안드로이드에서 내보낸 연락처 파일(.vcf)</div>
+      </div>
+      <div class="file-name" id="filename-vcf"></div>
+      <button class="btn" id="btn-vcf2xl" disabled>엑셀 파일로 변환하기</button>
+      <div class="result" id="result-vcf2xl"></div>
+    </div>
+    <div class="format-help">
+      <b>이렇게 변환돼요:</b> 이름·전화번호·이메일·회사·주소·메모 컬럼이 있는 엑셀 파일(.xlsx)로 저장돼요. 전화번호나 이메일이 여러 개면 세미콜론(;)으로 구분해서 한 칸에 들어가요.
+    </div>
+  </div>
+
+  <div class="panel" id="panel-xl2vcf">
+    <div class="card">
+      <div class="drop" id="drop-xl">
+        <input type="file" id="file-xl" accept=".xlsx,.xls,.csv">
+        <div class="icon">📊</div>
+        <div class="main-text">엑셀/CSV 파일을 여기로 끌어놓거나 클릭하세요</div>
+        <div class="sub-text">이름, 전화번호 열이 포함된 파일</div>
+      </div>
+      <div class="file-name" id="filename-xl"></div>
+      <button class="btn" id="btn-xl2vcf" disabled>연락처 파일(.vcf)로 변환하기</button>
+      <div class="result" id="result-xl2vcf"></div>
+    </div>
+    <div class="format-help">
+      <b>엑셀 파일 만들 때 이렇게 컬럼명을 써주세요:</b><br>
+      <code>이름</code> (필수) · <code>전화번호</code> · <code>이메일</code> · <code>회사</code> · <code>주소</code> · <code>메모</code><br>
+      전화번호가 여러 개면 세미콜론(;)이나 쉼표(,)로 구분해서 한 칸에 넣으면 각각 등록돼요.
+    </div>
+  </div>
+
+  <p class="privacy-note">🔒 업로드한 파일은 이 브라우저 안에서만 처리되고, 어디로도 전송되지 않아요.</p>
+
+  <section class="info">
+    <h2>이런 분들이 많이 써요</h2>
+    <p>휴대폰을 바꾸면서 연락처를 정리하고 싶을 때, 명함이나 거래처 연락처를 엑셀로 관리하다가 폰에 한번에 등록하고 싶을 때, 반대로 폰 연락처를 백업해서 엑셀로 열어보고 싶을 때 사용하시면 돼요.</p>
+  </section>
+</main>
+
+<footer>
+  <div>
+    <a href="about.html">사이트 소개</a>·
+    <a href="privacy.html">개인정보처리방침</a>·
+    <a href="terms.html">이용약관</a>·
+    <a href="blog/">가이드</a>
+  </div>
+  <div style="margin-top:10px;">© 연락처 변환기</div>
+</footer>
+
+<script>
+// ───────── 탭 전환 ─────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ───────── 공통: 드래그앤드롭 ─────────
+function setupDrop(dropId, inputId, onFile) {
+  const drop = document.getElementById(dropId);
+  const input = document.getElementById(inputId);
+  drop.addEventListener('click', () => input.click());
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault();
+    drop.classList.remove('drag');
+    if (e.dataTransfer.files.length) onFile(e.dataTransfer.files[0]);
+  });
+  input.addEventListener('change', () => { if (input.files.length) onFile(input.files[0]); });
+}
+
+// ───────── vCard 파싱 ─────────
+function decodeQuotedPrintable(str) {
+  str = str.replace(/=\r?\n/g, '');
+  return str.replace(/=([0-9A-Fa-f]{2})/g, (m, hex) => String.fromCharCode(parseInt(hex, 16)));
+}
+
+function unfoldLines(text) {
+  return text.replace(/\r\n/g, '\n').replace(/\n[ \t]/g, '');
+}
+
+function parseVCard(text) {
+  const unfolded = unfoldLines(text);
+  const blocks = unfolded.split(/BEGIN:VCARD/i).slice(1);
+  const contacts = [];
+
+  blocks.forEach(block => {
+    const lines = block.split(/END:VCARD/i)[0].split('\n').map(l => l.trim()).filter(Boolean);
+    const c = { 이름: '', 회사: '', 전화번호: [], 이메일: [], 주소: '', 메모: '' };
+
+    lines.forEach(line => {
+      const colonIdx = line.indexOf(':');
+      if (colonIdx === -1) return;
+      let propPart = line.slice(0, colonIdx);
+      let value = line.slice(colonIdx + 1);
+      const propBits = propPart.split(';');
+      const prop = propBits[0].toUpperCase();
+      const params = propBits.slice(1).join(';').toUpperCase();
+
+      if (params.includes('QUOTED-PRINTABLE')) value = decodeQuotedPrintable(value);
+      value = value.replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\n/gi, ' ');
+
+      if (prop === 'FN') {
+        if (!c.이름) c.이름 = value;
+      } else if (prop === 'N' && !c.이름) {
+        const parts = value.split(';').filter(Boolean);
+        c.이름 = parts.reverse().join(' ').trim();
+      } else if (prop === 'ORG') {
+        c.회사 = value.split(';').filter(Boolean).join(' ');
+      } else if (prop === 'TEL') {
+        if (value) c.전화번호.push(value);
+      } else if (prop === 'EMAIL') {
+        if (value) c.이메일.push(value);
+      } else if (prop === 'ADR') {
+        const parts = value.split(';').filter(Boolean);
+        if (parts.length) c.주소 = parts.join(' ');
+      } else if (prop === 'NOTE') {
+        c.메모 = value;
+      }
+    });
+
+    if (c.이름 || c.전화번호.length || c.이메일.length) {
+      contacts.push({
+        이름: c.이름 || '(이름 없음)',
+        회사: c.회사,
+        전화번호: c.전화번호.join('; '),
+        이메일: c.이메일.join('; '),
+        주소: c.주소,
+        메모: c.메모
+      });
+    }
+  });
+
+  return contacts;
+}
+
+let vcfFile = null;
+setupDrop('drop-vcf', 'file-vcf', file => {
+  vcfFile = file;
+  document.getElementById('filename-vcf').style.display = 'block';
+  document.getElementById('filename-vcf').textContent = '선택된 파일: ' + file.name;
+  document.getElementById('btn-vcf2xl').disabled = false;
+  document.getElementById('result-vcf2xl').style.display = 'none';
+});
+
+document.getElementById('btn-vcf2xl').addEventListener('click', () => {
+  if (!vcfFile) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const contacts = parseVCard(e.target.result);
+      const resultBox = document.getElementById('result-vcf2xl');
+      if (!contacts.length) {
+        resultBox.className = 'result error';
+        resultBox.style.display = 'block';
+        resultBox.textContent = '연락처를 찾지 못했어요. 올바른 .vcf 파일인지 확인해주세요.';
+        return;
+      }
+      const ws = XLSX.utils.json_to_sheet(contacts);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '연락처');
+      XLSX.writeFile(wb, '연락처_변환.xlsx');
+      resultBox.className = 'result';
+      resultBox.style.display = 'block';
+      resultBox.textContent = `✅ 연락처 ${contacts.length}개 변환 완료! 다운로드가 시작됐어요.`;
+    } catch (err) {
+      const resultBox = document.getElementById('result-vcf2xl');
+      resultBox.className = 'result error';
+      resultBox.style.display = 'block';
+      resultBox.textContent = '변환 중 오류가 발생했어요: ' + err.message;
+    }
+  };
+  reader.readAsText(vcfFile, 'UTF-8');
+});
+
+// ───────── 엑셀/CSV → vCard ─────────
+function escapeVCardValue(v) {
+  return String(v || '').replace(/\\/g, '\\\\').replace(/,/g, '\\,').replace(/;/g, '\\;');
+}
+
+function findColumn(headers, aliases) {
+  const found = headers.find(h => aliases.includes(String(h).trim().toLowerCase()));
+  return found;
+}
+
+function rowsToVCard(rows) {
+  if (!rows.length) return '';
+  const headers = Object.keys(rows[0]);
+  const nameCol = findColumn(headers, ['이름', '성명', 'name', 'fn']);
+  const telCol = findColumn(headers, ['전화번호', '전화', '휴대폰', 'phone', 'tel', 'mobile']);
+  const emailCol = findColumn(headers, ['이메일', 'email', 'e-mail']);
+  const orgCol = findColumn(headers, ['회사', '소속', 'org', 'company']);
+  const adrCol = findColumn(headers, ['주소', 'address', 'adr']);
+  const noteCol = findColumn(headers, ['메모', 'note', '비고']);
+
+  let out = '';
+  rows.forEach(row => {
+    const name = nameCol ? row[nameCol] : '';
+    if (!name) return;
+    out += 'BEGIN:VCARD\r\nVERSION:3.0\r\n';
+    out += 'FN:' + escapeVCardValue(name) + '\r\n';
+    out += 'N:' + escapeVCardValue(name) + ';;;;\r\n';
+    if (orgCol && row[orgCol]) out += 'ORG:' + escapeVCardValue(row[orgCol]) + '\r\n';
+    if (telCol && row[telCol]) {
+      String(row[telCol]).split(/[;,]/).map(t => t.trim()).filter(Boolean).forEach(t => {
+        out += 'TEL;TYPE=CELL:' + escapeVCardValue(t) + '\r\n';
+      });
+    }
+    if (emailCol && row[emailCol]) {
+      String(row[emailCol]).split(/[;,]/).map(t => t.trim()).filter(Boolean).forEach(t => {
+        out += 'EMAIL:' + escapeVCardValue(t) + '\r\n';
+      });
+    }
+    if (adrCol && row[adrCol]) out += 'ADR:;;' + escapeVCardValue(row[adrCol]) + ';;;;\r\n';
+    if (noteCol && row[noteCol]) out += 'NOTE:' + escapeVCardValue(row[noteCol]) + '\r\n';
+    out += 'END:VCARD\r\n';
+  });
+  return out;
+}
+
+let xlFile = null;
+setupDrop('drop-xl', 'file-xl', file => {
+  xlFile = file;
+  document.getElementById('filename-xl').style.display = 'block';
+  document.getElementById('filename-xl').textContent = '선택된 파일: ' + file.name;
+  document.getElementById('btn-xl2vcf').disabled = false;
+  document.getElementById('result-xl2vcf').style.display = 'none';
+});
+
+document.getElementById('btn-xl2vcf').addEventListener('click', () => {
+  if (!xlFile) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const resultBox = document.getElementById('result-xl2vcf');
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      const vcardText = rowsToVCard(rows);
+
+      if (!vcardText) {
+        resultBox.className = 'result error';
+        resultBox.style.display = 'block';
+        resultBox.textContent = '변환할 연락처를 찾지 못했어요. "이름" 컬럼이 있는지 확인해주세요.';
+        return;
+      }
+
+      const blob = new Blob([vcardText], { type: 'text/vcard;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '연락처.vcf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      const count = (vcardText.match(/BEGIN:VCARD/g) || []).length;
+      resultBox.className = 'result';
+      resultBox.style.display = 'block';
+      resultBox.textContent = `✅ 연락처 ${count}개 변환 완료! 다운로드가 시작됐어요.`;
+    } catch (err) {
+      resultBox.className = 'result error';
+      resultBox.style.display = 'block';
+      resultBox.textContent = '변환 중 오류가 발생했어요: ' + err.message;
+    }
+  };
+  reader.readAsArrayBuffer(xlFile);
+});
+</script>
+
+</body>
+</html>

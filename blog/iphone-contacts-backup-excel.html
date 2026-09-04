@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아이폰 연락처 엑셀로 백업하는 법 (vCard 내보내기)</title>
+<meta name="description" content="아이폰 연락처를 vCard로 내보내고 엑셀 파일로 변환해서 백업하는 방법을 단계별로 알려드립니다.">
+<link rel="canonical" href="https://whrbwkd.github.io/vcard-converter/blog/iphone-contacts-backup-excel.html">
+<style>
+  :root{--accent:#2563eb; --bg:#f7f8fb; --text:#1a1d29; --sub:#5b6072; --border:#e3e6ee;}
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif; background:var(--bg); color:var(--text); line-height:1.75;}
+  header{background:#fff; border-bottom:1px solid var(--border); padding:16px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;}
+  header a.logo{font-size:20px; font-weight:800; color:var(--text); text-decoration:none;}
+  header a.logo span{color:var(--accent);}
+  nav a{color:var(--sub); text-decoration:none; font-size:14px; margin-left:18px;}
+  main{max-width:680px; margin:0 auto; padding:40px 20px 60px;}
+  h1{font-size:26px; margin-bottom:6px;}
+  .meta{color:var(--sub); font-size:13.5px; margin-bottom:28px;}
+  h2{font-size:19px; margin-top:32px;}
+  p, li{color:var(--sub); font-size:15.5px;}
+  ol, ul{padding-left:22px;}
+  .tip{background:#eef2ff; border-radius:12px; padding:16px 18px; margin:20px 0; font-size:14.5px; color:#1e3a8a;}
+  .cta{
+    display:block; text-align:center; background:var(--accent); color:#fff; text-decoration:none;
+    font-weight:800; padding:16px; border-radius:12px; margin:28px 0; font-size:16px;
+  }
+  footer{border-top:1px solid var(--border); padding:28px 20px; text-align:center; font-size:13px; color:var(--sub); background:#fff; margin-top:20px;}
+  footer a{color:var(--sub); margin:0 8px; text-decoration:none;}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="/vcard-converter/">연락<span>변환</span>기</a>
+  <nav><a href="/vcard-converter/">변환하기</a><a href="/vcard-converter/blog/">가이드</a></nav>
+</header>
+<main>
+  <h1>아이폰 연락처 엑셀로 백업하는 법</h1>
+  <p class="meta">연락처 관리 가이드</p>
+
+  <p>휴대폰을 바꾸기 전이나, 연락처를 잃어버릴까 걱정될 때 엑셀 파일로 따로 백업해두면 안심이 됩니다. 아이폰은 연락처를 앱 형태로만 저장하고 있어서, 엑셀로 바로 내보내는 기능은 없어요. 대신 iCloud를 거치면 vCard 파일로 뽑아낼 수 있고, 이 파일을 엑셀로 변환하면 됩니다.</p>
+
+  <h2>1단계. iCloud에서 연락처를 vCard로 내보내기</h2>
+  <ol>
+    <li>컴퓨터 웹 브라우저에서 <b>icloud.com</b> 접속 후 아이폰과 같은 Apple 계정으로 로그인</li>
+    <li><b>연락처</b> 아이콘 클릭</li>
+    <li>내보내고 싶은 연락처를 클릭 (전체를 선택하려면 하나를 클릭한 뒤 Ctrl+A 또는 Cmd+A)</li>
+    <li>화면 왼쪽 아래 <b>톱니바퀴(설정) 아이콘</b> 클릭 → <b>vCard 내보내기</b> 선택</li>
+    <li>선택한 연락처가 <b>.vcf</b> 파일로 다운로드됩니다</li>
+  </ol>
+
+  <div class="tip">💡 아이폰에서 바로 하려면: 연락처 앱 대신 <b>단축어(Shortcuts)</b> 앱으로 "모든 연락처 공유" 같은 단축어를 만들어 .vcf로 내보내는 방법도 있지만, PC에서 iCloud로 하는 방법이 훨씬 간단해요.</div>
+
+  <h2>2단계. vCard(.vcf) 파일을 엑셀로 변환하기</h2>
+  <p>다운로드된 .vcf 파일은 메모장으로 열면 코드처럼 보여서 알아보기 어려워요. 아래 변환기에 파일을 올리면 이름·전화번호·이메일이 정리된 엑셀 파일로 바로 바뀝니다.</p>
+
+  <a class="cta" href="/vcard-converter/">📇 지금 바로 vCard → 엑셀 변환하기</a>
+
+  <h2>3단계. 백업 파일 안전하게 보관하기</h2>
+  <p>변환된 엑셀 파일은 클라우드 드라이브(구글 드라이브, 원드라이브 등)나 이메일로 본인에게 보내두면 폰을 잃어버리거나 바꾸더라도 언제든 다시 꺼내볼 수 있어요. 나중에 새 폰에 연락처를 다시 넣고 싶다면, 반대로 엑셀 파일을 vCard로 변환해서 가져오기 하면 됩니다.</p>
+
+  <h2>자주 묻는 질문</h2>
+  <p><b>Q. 연락처 사진도 백업되나요?</b><br>A. vCard 파일 자체에는 사진이 포함될 수 있지만, 엑셀로 변환할 때는 텍스트 정보(이름·전화번호 등)만 옮겨져요. 사진까지 백업하려면 원본 .vcf 파일을 따로 보관해두시는 걸 추천해요.</p>
+  <p><b>Q. 안드로이드 폰으로 옮길 때도 되나요?</b><br>A. 네, vCard는 아이폰·안드로이드 공통 표준 형식이라 그대로 호환돼요.</p>
+</main>
+<footer>
+  <div><a href="/vcard-converter/about.html">사이트 소개</a>·<a href="/vcard-converter/privacy.html">개인정보처리방침</a>·<a href="/vcard-converter/terms.html">이용약관</a>·<a href="/vcard-converter/blog/">가이드</a></div>
+  <div style="margin-top:10px;">© 연락처 변환기</div>
+</footer>
+</body>
+</html>
