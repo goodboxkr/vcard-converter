@@ -89,6 +89,12 @@
     background:var(--card); border:1px solid var(--border); border-radius:16px;
     padding:28px 24px; box-shadow:0 2px 10px rgba(20,20,40,0.04);
   }
+  .sample-link{
+    display:block; text-align:center; font-size:14px; font-weight:700;
+    color:var(--accent-dark); text-decoration:none; margin-bottom:14px;
+    background:#eef2ff; border-radius:10px; padding:10px;
+  }
+  .sample-link:hover{background:#e0e7ff;}
   .drop{
     border:2px dashed var(--border); border-radius:14px; padding:40px 20px;
     text-align:center; cursor:pointer; transition:border-color .15s, background .15s;
@@ -190,6 +196,7 @@
 
   <div class="panel" id="panel-xl2vcf">
     <div class="card">
+      <a href="#" class="sample-link" id="downloadSample">📥 샘플 엑셀 양식 다운받기</a>
       <div class="drop" id="drop-xl">
         <input type="file" id="file-xl" accept=".xlsx,.xls,.csv">
         <div class="icon">📊</div>
@@ -203,7 +210,7 @@
     <div class="format-help">
       <b>엑셀 파일 만들 때 이렇게 컬럼명을 써주세요:</b><br>
       <code>이름</code> (필수) · <code>전화번호</code> · <code>이메일</code> · <code>회사</code> · <code>주소</code> · <code>메모</code><br>
-      전화번호가 여러 개면 세미콜론(;)이나 쉼표(,)로 구분해서 한 칸에 넣으면 각각 등록돼요.
+      전화번호가 여러 개면 세미콜론(;)이나 쉼표(,)로 구분해서 한 칸에 넣으면 각각 등록돼요. 위 "샘플 엑셀 양식 다운받기"를 눌러서 받은 파일에 그대로 채워 넣으면 가장 안전해요.
     </div>
   </div>
 
@@ -268,6 +275,34 @@ function setupDrop(dropId, inputId, onFile) {
     if (e.dataTransfer.files.length) onFile(e.dataTransfer.files[0]);
   });
   input.addEventListener('change', () => { if (input.files.length) onFile(input.files[0]); });
+}
+
+// ───────── 공통: 저장(가능하면 "다른 이름으로 저장" 위치 선택) ─────────
+async function saveFile(blob, suggestedName, extension, mimeType) {
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName,
+        types: [{ description: extension.toUpperCase() + ' 파일', accept: { [mimeType]: ['.' + extension] } }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return true;
+    } catch (err) {
+      if (err.name === 'AbortError') return false;
+      // 지원은 하나 실패한 경우 기존 방식으로 폴백
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = suggestedName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  return true;
 }
 
 // ───────── vCard 파싱 ─────────
@@ -362,10 +397,10 @@ setupDrop('drop-vcf', 'file-vcf', file => {
 document.getElementById('btn-vcf2xl').addEventListener('click', () => {
   if (!vcfFile) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async e => {
+    const resultBox = document.getElementById('result-vcf2xl');
     try {
       const contacts = parseVCard(e.target.result);
-      const resultBox = document.getElementById('result-vcf2xl');
       if (!contacts.length) {
         resultBox.className = 'result error';
         resultBox.style.display = 'block';
@@ -375,12 +410,14 @@ document.getElementById('btn-vcf2xl').addEventListener('click', () => {
       const ws = XLSX.utils.json_to_sheet(contacts);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, '연락처');
-      XLSX.writeFile(wb, '연락처_변환.xlsx');
+      const arrayBuf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([arrayBuf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const saved = await saveFile(blob, '연락처_변환.xlsx', 'xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      if (!saved) return;
       resultBox.className = 'result';
       resultBox.style.display = 'block';
       resultBox.textContent = `✅ 연락처 ${contacts.length}개 변환 완료! 다운로드가 시작됐어요.`;
     } catch (err) {
-      const resultBox = document.getElementById('result-vcf2xl');
       resultBox.className = 'result error';
       resultBox.style.display = 'block';
       resultBox.textContent = '변환 중 오류가 발생했어요: ' + err.message;
@@ -434,6 +471,20 @@ function rowsToVCard(rows) {
   return out;
 }
 
+document.getElementById('downloadSample').addEventListener('click', async (e) => {
+  e.preventDefault();
+  const sampleRows = [
+    { 이름: '홍길동', 전화번호: '010-1234-5678', 이메일: 'hong@example.com', 회사: '굿박스', 주소: '서울시 강남구', 메모: '거래처' },
+    { 이름: '김철수', 전화번호: '010-9876-5432; 02-123-4567', 이메일: '', 회사: '', 주소: '', 메모: '' }
+  ];
+  const ws = XLSX.utils.json_to_sheet(sampleRows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '연락처');
+  const arrayBuf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([arrayBuf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  await saveFile(blob, '연락처_샘플양식.xlsx', 'xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+});
+
 let xlFile = null;
 setupDrop('drop-xl', 'file-xl', file => {
   xlFile = file;
@@ -446,7 +497,7 @@ setupDrop('drop-xl', 'file-xl', file => {
 document.getElementById('btn-xl2vcf').addEventListener('click', () => {
   if (!xlFile) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async e => {
     const resultBox = document.getElementById('result-xl2vcf');
     try {
       const data = new Uint8Array(e.target.result);
@@ -463,13 +514,8 @@ document.getElementById('btn-xl2vcf').addEventListener('click', () => {
       }
 
       const blob = new Blob([vcardText], { type: 'text/vcard;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = '연락처.vcf';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const saved = await saveFile(blob, '연락처.vcf', 'vcf', 'text/vcard');
+      if (!saved) return;
 
       const count = (vcardText.match(/BEGIN:VCARD/g) || []).length;
       resultBox.className = 'result';
